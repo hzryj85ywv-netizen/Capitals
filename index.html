@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>World Capitals Quiz</title>
+<style>
+  :root {
+    --bg: #ECEFE8;
+    --panel: #F8F9F5;
+    --ink: #22303A;
+    --muted: #5D6B70;
+    --line: #C9D2CC;
+    --grid: rgba(31, 110, 104, 0.07);
+    --accent: #1F6E68;
+    --accent-ink: #F4F8F6;
+    --good: #2E7D4F;
+    --warn: #A66B1F;
+    --bad: #B0413E;
+    --shadow: 0 1px 2px rgba(34, 48, 58, 0.08), 0 8px 24px rgba(34, 48, 58, 0.07);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0E181D;
+      --panel: #152229;
+      --ink: #E6ECE9;
+      --muted: #93A4A8;
+      --line: #26363D;
+      --grid: rgba(79, 179, 169, 0.06);
+      --accent: #4FB3A9;
+      --accent-ink: #0C1A1E;
+      --good: #63C08A;
+      --warn: #D9A045;
+      --bad: #E07A72;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #ECEFE8;
+    --panel: #F8F9F5;
+    --ink: #22303A;
+    --muted: #5D6B70;
+    --line: #C9D2CC;
+    --grid: rgba(31, 110, 104, 0.07);
+    --accent: #1F6E68;
+    --accent-ink: #F4F8F6;
+    --good: #2E7D4F;
+    --warn: #A66B1F;
+    --bad: #B0413E;
+    --shadow: 0 1px 2px rgba(34, 48, 58, 0.08), 0 8px 24px rgba(34, 48, 58, 0.07);
+  }
+  :root[data-theme="dark"] {
+    --bg: #0E181D;
+    --panel: #152229;
+    --ink: #E6ECE9;
+    --muted: #93A4A8;
+    --line: #26363D;
+    --grid: rgba(79, 179, 169, 0.06);
+    --accent: #4FB3A9;
+    --accent-ink: #0C1A1E;
+    --good: #63C08A;
+    --warn: #D9A045;
+    --bad: #E07A72;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--ink);
+    background-color: var(--bg);
+    background-image:
+      repeating-linear-gradient(0deg, var(--grid) 0, var(--grid) 1px, transparent 1px, transparent 56px),
+      repeating-linear-gradient(90deg, var(--grid) 0, var(--grid) 1px, transparent 1px, transparent 56px);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 32px 16px 48px;
+    line-height: 1.5;
+  }
+  .app { width: 100%; max-width: 640px; }
+
+  header.masthead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .masthead h1 {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: 1.45rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    margin: 0;
+  }
+  .masthead .sub {
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+  }
+
+  .regions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .regions button {
+    font: inherit;
+    font-size: 0.82rem;
+    letter-spacing: 0.02em;
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .regions button[aria-pressed="true"] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 600;
+  }
+  .regions button:focus-visible,
+  .actions button:focus-visible,
+  #answer:focus-visible,
+  .footer button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    padding: 32px 28px 28px;
+  }
+  .eyebrow {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .country {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: clamp(1.8rem, 6vw, 2.6rem);
+    font-weight: 600;
+    text-wrap: balance;
+    margin: 10px 0 4px;
+    line-height: 1.15;
+  }
+  .country .flag { margin-right: 12px; }
+  .prompt-hint {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 0 0 20px;
+  }
+
+  form.answer-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  #answer {
+    flex: 1 1 220px;
+    font: inherit;
+    font-size: 1.05rem;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--ink);
+  }
+  #answer::placeholder { color: var(--muted); opacity: 0.7; }
+  .actions { display: flex; gap: 10px; }
+  .actions button {
+    font: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    cursor: pointer;
+  }
+  #check { background: var(--accent); color: var(--accent-ink); }
+  #reveal { background: transparent; color: var(--muted); border-color: var(--line); }
+  #next { background: var(--accent); color: var(--accent-ink); display: none; }
+
+  .feedback { min-height: 96px; margin-top: 22px; }
+  .stamp {
+    display: inline-block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    padding: 6px 14px;
+    border: 2px solid currentColor;
+    border-radius: 6px;
+    transform: rotate(-3deg);
+    animation: stamp-in 180ms ease-out;
+  }
+  @keyframes stamp-in {
+    from { transform: rotate(-3deg) scale(1.6); opacity: 0; }
+    to   { transform: rotate(-3deg) scale(1);   opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .stamp { animation: none; }
+  }
+  .stamp.good { color: var(--good); }
+  .stamp.warn { color: var(--warn); }
+  .stamp.bad  { color: var(--bad); }
+  .feedback p { margin: 10px 0 0; font-size: 0.95rem; }
+  .feedback .capital-name { font-weight: 700; }
+  .feedback .also { color: var(--muted); font-size: 0.85rem; }
+
+  .progress { margin-top: 26px; }
+  .progress .bar {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--line);
+    overflow: hidden;
+  }
+  .progress .fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    border-radius: 3px;
+    transition: width 300ms ease;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .progress .fill { transition: none; }
+  }
+  .progress .label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    font-size: 0.82rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .footer .stats { display: flex; gap: 18px; flex-wrap: wrap; }
+  .footer .stats strong { color: var(--ink); font-weight: 600; }
+  .footer button {
+    font: inherit;
+    font-size: 0.78rem;
+    background: none;
+    border: none;
+    color: var(--muted);
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="masthead">
+    <h1>World Capitals</h1>
+    <span class="sub" id="scope-count">197 countries</span>
+  </header>
+
+  <nav class="regions" id="regions" aria-label="Region filter"></nav>
+
+  <main class="card">
+    <div class="eyebrow">
+      <span id="region-label">All regions</span>
+      <span id="mastery-tag"></span>
+    </div>
+    <h2 class="country" id="country"><span class="flag"></span><span class="name"></span></h2>
+    <p class="prompt-hint">What is the capital? Close spelling counts.</p>
+
+    <form class="answer-row" id="form" autocomplete="off">
+      <input id="answer" type="text" placeholder="Type the capital…"
+             autocapitalize="off" autocorrect="off" spellcheck="false"
+             aria-label="Your answer" />
+      <div class="actions">
+        <button type="submit" id="check">Check</button>
+        <button type="button" id="reveal">Show answer</button>
+        <button type="button" id="next">Next country</button>
+      </div>
+    </form>
+
+    <div class="feedback" id="feedback" aria-live="polite"></div>
+
+    <div class="progress">
+      <div class="bar"><div class="fill" id="fill"></div></div>
+      <div class="label">
+        <span id="mastered-label">0 mastered</span>
+        <span>3 correct in a row = mastered</span>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="stats">
+      <span>Session <strong id="s-score">0 / 0</strong></span>
+      <span>Streak <strong id="s-streak">0</strong></span>
+      <span>Best <strong id="s-best">0</strong></span>
+    </div>
+    <button id="reset" type="button">Reset progress</button>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // [country, region, iso2, [accepted capitals...]] — first capital is the primary one shown.
+  var DATA = [
+    ["Algeria","AF","dz",["Algiers"]],
+    ["Angola","AF","ao",["Luanda"]],
+    ["Benin","AF","bj",["Porto-Novo","Cotonou"]],
+    ["Botswana","AF","bw",["Gaborone"]],
+    ["Burkina Faso","AF","bf",["Ouagadougou"]],
+    ["Burundi","AF","bi",["Gitega","Bujumbura"]],
+    ["Cabo Verde","AF","cv",["Praia"]],
+    ["Cameroon","AF","cm",["Yaoundé"]],
+    ["Central African Republic","AF","cf",["Bangui"]],
+    ["Chad","AF","td",["N'Djamena"]],
+    ["Comoros","AF","km",["Moroni"]],
+    ["Republic of the Congo","AF","cg",["Brazzaville"]],
+    ["DR Congo","AF","cd",["Kinshasa"]],
+    ["Côte d'Ivoire (Ivory Coast)","AF","ci",["Yamoussoukro","Abidjan"]],
+    ["Djibouti","AF","dj",["Djibouti","Djibouti City"]],
+    ["Egypt","AF","eg",["Cairo"]],
+    ["Equatorial Guinea","AF","gq",["Malabo"]],
+    ["Eritrea","AF","er",["Asmara"]],
+    ["Eswatini","AF","sz",["Mbabane","Lobamba"]],
+    ["Ethiopia","AF","et",["Addis Ababa"]],
+    ["Gabon","AF","ga",["Libreville"]],
+    ["The Gambia","AF","gm",["Banjul"]],
+    ["Ghana","AF","gh",["Accra"]],
+    ["Guinea","AF","gn",["Conakry"]],
+    ["Guinea-Bissau","AF","gw",["Bissau"]],
+    ["Kenya","AF","ke",["Nairobi"]],
+    ["Lesotho","AF","ls",["Maseru"]],
+    ["Liberia","AF","lr",["Monrovia"]],
+    ["Libya","AF","ly",["Tripoli"]],
+    ["Madagascar","AF","mg",["Antananarivo"]],
+    ["Malawi","AF","mw",["Lilongwe"]],
+    ["Mali","AF","ml",["Bamako"]],
+    ["Mauritania","AF","mr",["Nouakchott"]],
+    ["Mauritius","AF","mu",["Port Louis"]],
+    ["Morocco","AF","ma",["Rabat"]],
+    ["Mozambique","AF","mz",["Maputo"]],
+    ["Namibia","AF","na",["Windhoek"]],
+    ["Niger","AF","ne",["Niamey"]],
+    ["Nigeria","AF","ng",["Abuja"]],
+    ["Rwanda","AF","rw",["Kigali"]],
+    ["São Tomé and Príncipe","AF","st",["São Tomé"]],
+    ["Senegal","AF","sn",["Dakar"]],
+    ["Seychelles","AF","sc",["Victoria"]],
+    ["Sierra Leone","AF","sl",["Freetown"]],
+    ["Somalia","AF","so",["Mogadishu"]],
+    ["South Africa","AF","za",["Pretoria","Cape Town","Bloemfontein"]],
+    ["South Sudan","AF","ss",["Juba"]],
+    ["Sudan","AF","sd",["Khartoum"]],
+    ["Tanzania","AF","tz",["Dodoma","Dar es Salaam"]],
+    ["Togo","AF","tg",["Lomé"]],
+    ["Tunisia","AF","tn",["Tunis"]],
+    ["Uganda","AF","ug",["Kampala"]],
+    ["Zambia","AF","zm",["Lusaka"]],
+    ["Zimbabwe","AF","zw",["Harare"]],
+
+    ["Afghanistan","AS","af",["Kabul"]],
+    ["Armenia","AS","am",["Yerevan"]],
+    ["Azerbaijan","AS","az",["Baku"]],
+    ["Bahrain","AS","bh",["Manama"]],
+    ["Bangladesh","AS","bd",["Dhaka"]],
+    ["Bhutan","AS","bt",["Thimphu"]],
+    ["Brunei","AS","bn",["Bandar Seri Begawan"]],
+    ["Cambodia","AS","kh",["Phnom Penh"]],
+    ["China","AS","cn",["Beijing"]],
+    ["Georgia","AS","ge",["Tbilisi"]],
+    ["India","AS","in",["New Delhi","Delhi"]],
+    ["Indonesia","AS","id",["Jakarta","Nusantara"]],
+    ["Iran","AS","ir",["Tehran"]],
+    ["Iraq","AS","iq",["Baghdad"]],
+    ["Israel","AS","il",["Jerusalem"]],
+    ["Japan","AS","jp",["Tokyo"]],
+    ["Jordan","AS","jo",["Amman"]],
+    ["Kazakhstan","AS","kz",["Astana","Nur-Sultan"]],
+    ["Kuwait","AS","kw",["Kuwait City","Kuwait"]],
+    ["Kyrgyzstan","AS","kg",["Bishkek"]],
+    ["Laos","AS","la",["Vientiane"]],
+    ["Lebanon","AS","lb",["Beirut"]],
+    ["Malaysia","AS","my",["Kuala Lumpur","Putrajaya"]],
+    ["Maldives","AS","mv",["Malé"]],
+    ["Mongolia","AS","mn",["Ulaanbaatar","Ulan Bator"]],
+    ["Myanmar (Burma)","AS","mm",["Naypyidaw","Nay Pyi Taw"]],
+    ["Nepal","AS","np",["Kathmandu"]],
+    ["North Korea","AS","kp",["Pyongyang"]],
+    ["Oman","AS","om",["Muscat"]],
+    ["Pakistan","AS","pk",["Islamabad"]],
+    ["Palestine","AS","ps",["Ramallah","East Jerusalem","Jerusalem"]],
+    ["Philippines","AS","ph",["Manila"]],
+    ["Qatar","AS","qa",["Doha"]],
+    ["Saudi Arabia","AS","sa",["Riyadh"]],
+    ["Singapore","AS","sg",["Singapore"]],
+    ["South Korea","AS","kr",["Seoul"]],
+    ["Sri Lanka","AS","lk",["Sri Jayawardenepura Kotte","Kotte","Colombo"]],
+    ["Syria","AS","sy",["Damascus"]],
+    ["Taiwan","AS","tw",["Taipei"]],
+    ["Tajikistan","AS","tj",["Dushanbe"]],
+    ["Thailand","AS","th",["Bangkok","Krung Thep"]],
+    ["Timor-Leste","AS","tl",["Dili"]],
+    ["Turkey","AS","tr",["Ankara"]],
+    ["Turkmenistan","AS","tm",["Ashgabat"]],
+    ["United Arab Emirates","AS","ae",["Abu Dhabi"]],
+    ["Uzbekistan","AS","uz",["Tashkent"]],
+    ["Vietnam","AS","vn",["Hanoi"]],
+    ["Yemen","AS","ye",["Sana'a","Sanaa"]],
+
+    ["Albania","EU","al",["Tirana"]],
+    ["Andorra","EU","ad",["Andorra la Vella"]],
+    ["Austria","EU","at",["Vienna"]],
+    ["Belarus","EU","by",["Minsk"]],
+    ["Belgium","EU","be",["Brussels"]],
+    ["Bosnia and Herzegovina","EU","ba",["Sarajevo"]],
+    ["Bulgaria","EU","bg",["Sofia"]],
+    ["Croatia","EU","hr",["Zagreb"]],
+    ["Cyprus","EU","cy",["Nicosia"]],
+    ["Czechia","EU","cz",["Prague"]],
+    ["Denmark","EU","dk",["Copenhagen"]],
+    ["Estonia","EU","ee",["Tallinn"]],
+    ["Finland","EU","fi",["Helsinki"]],
+    ["France","EU","fr",["Paris"]],
+    ["Germany","EU","de",["Berlin"]],
+    ["Greece","EU","gr",["Athens"]],
+    ["Hungary","EU","hu",["Budapest"]],
+    ["Iceland","EU","is",["Reykjavík"]],
+    ["Ireland","EU","ie",["Dublin"]],
+    ["Italy","EU","it",["Rome"]],
+    ["Kosovo","EU","xk",["Pristina","Prishtina"]],
+    ["Latvia","EU","lv",["Riga"]],
+    ["Liechtenstein","EU","li",["Vaduz"]],
+    ["Lithuania","EU","lt",["Vilnius"]],
+    ["Luxembourg","EU","lu",["Luxembourg","Luxembourg City"]],
+    ["Malta","EU","mt",["Valletta"]],
+    ["Moldova","EU","md",["Chișinău","Kishinev"]],
+    ["Monaco","EU","mc",["Monaco"]],
+    ["Montenegro","EU","me",["Podgorica"]],
+    ["Netherlands","EU","nl",["Amsterdam","The Hague"]],
+    ["North Macedonia","EU","mk",["Skopje"]],
+    ["Norway","EU","no",["Oslo"]],
+    ["Poland","EU","pl",["Warsaw"]],
+    ["Portugal","EU","pt",["Lisbon"]],
+    ["Romania","EU","ro",["Bucharest"]],
+    ["Russia","EU","ru",["Moscow"]],
+    ["San Marino","EU","sm",["San Marino","City of San Marino"]],
+    ["Serbia","EU","rs",["Belgrade"]],
+    ["Slovakia","EU","sk",["Bratislava"]],
+    ["Slovenia","EU","si",["Ljubljana"]],
+    ["Spain","EU","es",["Madrid"]],
+    ["Sweden","EU","se",["Stockholm"]],
+    ["Switzerland","EU","ch",["Bern"]],
+    ["Ukraine","EU","ua",["Kyiv","Kiev"]],
+    ["United Kingdom","EU","gb",["London"]],
+    ["Vatican City","EU","va",["Vatican City"]],
+
+    ["Antigua and Barbuda","NA","ag",["Saint John's","St John's"]],
+    ["The Bahamas","NA","bs",["Nassau"]],
+    ["Barbados","NA","bb",["Bridgetown"]],
+    ["Belize","NA","bz",["Belmopan"]],
+    ["Canada","NA","ca",["Ottawa"]],
+    ["Costa Rica","NA","cr",["San José"]],
+    ["Cuba","NA","cu",["Havana"]],
+    ["Dominica","NA","dm",["Roseau"]],
+    ["Dominican Republic","NA","do",["Santo Domingo"]],
+    ["El Salvador","NA","sv",["San Salvador"]],
+    ["Grenada","NA","gd",["Saint George's","St George's"]],
+    ["Guatemala","NA","gt",["Guatemala City","Guatemala"]],
+    ["Haiti","NA","ht",["Port-au-Prince"]],
+    ["Honduras","NA","hn",["Tegucigalpa"]],
+    ["Jamaica","NA","jm",["Kingston"]],
+    ["Mexico","NA","mx",["Mexico City","Ciudad de México"]],
+    ["Nicaragua","NA","ni",["Managua"]],
+    ["Panama","NA","pa",["Panama City","Panamá"]],
+    ["Saint Kitts and Nevis","NA","kn",["Basseterre"]],
+    ["Saint Lucia","NA","lc",["Castries"]],
+    ["Saint Vincent and the Grenadines","NA","vc",["Kingstown"]],
+    ["Trinidad and Tobago","NA","tt",["Port of Spain"]],
+    ["United States","NA","us",["Washington, D.C.","Washington DC","Washington"]],
+
+    ["Argentina","SA","ar",["Buenos Aires"]],
+    ["Bolivia","SA","bo",["Sucre","La Paz"]],
+    ["Brazil","SA","br",["Brasília"]],
+    ["Chile","SA","cl",["Santiago"]],
+    ["Colombia","SA","co",["Bogotá"]],
+    ["Ecuador","SA","ec",["Quito"]],
+    ["Guyana","SA","gy",["Georgetown"]],
+    ["Paraguay","SA","py",["Asunción"]],
+    ["Peru","SA","pe",["Lima"]],
+    ["Suriname","SA","sr",["Paramaribo"]],
+    ["Uruguay","SA","uy",["Montevideo"]],
+    ["Venezuela","SA","ve",["Caracas"]],
+
+    ["Australia","OC","au",["Canberra"]],
+    ["Fiji","OC","fj",["Suva"]],
+    ["Kiribati","OC","ki",["Tarawa","South Tarawa"]],
+    ["Marshall Islands","OC","mh",["Majuro"]],
+    ["Micronesia","OC","fm",["Palikir"]],
+    ["Nauru","OC","nr",["Yaren"]],
+    ["New Zealand","OC","nz",["Wellington"]],
+    ["Palau","OC","pw",["Ngerulmud"]],
+    ["Papua New Guinea","OC","pg",["Port Moresby"]],
+    ["Samoa","OC","ws",["Apia"]],
+    ["Solomon Islands","OC","sb",["Honiara"]],
+    ["Tonga","OC","to",["Nukuʻalofa","Nukualofa"]],
+    ["Tuvalu","OC","tv",["Funafuti"]],
+    ["Vanuatu","OC","vu",["Port Vila"]]
+  ];
+
+  var REGIONS = [
+    ["ALL", "All"],
+    ["AF", "Africa"],
+    ["AS", "Asia"],
+    ["EU", "Europe"],
+    ["NA", "N. America"],
+    ["SA", "S. America"],
+    ["OC", "Oceania"]
+  ];
+  var REGION_NAMES = {
+    AF: "Africa", AS: "Asia", EU: "Europe",
+    NA: "North America", SA: "South America", OC: "Oceania"
+  };
+
+  var STORE_KEY = "capitals-quiz-v1";
+
+  function flagEmoji(cc) {
+    return cc.toUpperCase().replace(/./g, function (ch) {
+      return String.fromCodePoint(ch.charCodeAt(0) + 127397);
+    });
+  }
+
+  // "São Tomé" -> "saotome": lowercase, strip accents, drop everything non-alphanumeric.
+  function normalize(s) {
+    return s.toLowerCase()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]/g, "");
+  }
+
+  function levenshtein(a, b) {
+    if (a === b) return 0;
+    var prev = [], cur = [], i, j;
+    for (j = 0; j <= b.length; j++) prev[j] = j;
+    for (i = 1; i <= a.length; i++) {
+      cur[0] = i;
+      for (j = 1; j <= b.length; j++) {
+        cur[j] = Math.min(
+          prev[j] + 1,
+          cur[j - 1] + 1,
+          prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+        );
+      }
+      var swap = prev; prev = cur; cur = swap;
+    }
+    return prev[b.length];
+  }
+
+  function allowedDistance(len) {
+    if (len <= 4) return 1;
+    if (len <= 7) return 2;
+    return 3;
+  }
+
+  // Returns {ok, exact, matched} — exact means spelled right (ignoring accents/punctuation).
+  function judge(guess, answers) {
+    var g = normalize(guess);
+    if (!g) return { ok: false };
+    var best = null;
+    for (var i = 0; i < answers.length; i++) {
+      var a = normalize(answers[i]);
+      var d = levenshtein(g, a);
+      if (d <= allowedDistance(a.length) && (best === null || d < best.d)) {
+        best = { d: d, matched: answers[i] };
+      }
+    }
+    if (!best) return { ok: false };
+    return { ok: true, exact: best.d === 0, matched: best.matched };
+  }
+
+  function loadStats() {
+    try {
+      return JSON.parse(localStorage.getItem(STORE_KEY)) || {};
+    } catch (e) { return {}; }
+  }
+  function saveStats() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(stats)); } catch (e) {}
+  }
+
+  var stats = loadStats();          // { cc: {streak, right, wrong} }
+  var region = "ALL";
+  var current = null;
+  var lastCC = null;
+  var answered = false;
+  var session = { right: 0, total: 0, streak: 0, best: 0 };
+
+  var $ = function (id) { return document.getElementById(id); };
+  var el = {
+    regions: $("regions"), scopeCount: $("scope-count"), regionLabel: $("region-label"),
+    masteryTag: $("mastery-tag"), country: $("country"), form: $("form"),
+    answer: $("answer"), check: $("check"), reveal: $("reveal"), next: $("next"),
+    feedback: $("feedback"), fill: $("fill"), masteredLabel: $("mastered-label"),
+    sScore: $("s-score"), sStreak: $("s-streak"), sBest: $("s-best"), reset: $("reset")
+  };
+
+  function scopeEntries() {
+    return region === "ALL" ? DATA : DATA.filter(function (e) { return e[1] === region; });
+  }
+
+  function statFor(cc) {
+    return stats[cc] || { streak: 0, right: 0, wrong: 0 };
+  }
+
+  function weightFor(cc) {
+    var s = statFor(cc);
+    if (s.streak <= 0) return s.wrong > 0 ? 10 : 6;  // missed or never-learned first
+    if (s.streak === 1) return 3;
+    if (s.streak === 2) return 2;
+    return 1;                                        // mastered: still shows up, rarely
+  }
+
+  function pickNext() {
+    var pool = scopeEntries().filter(function (e) { return e[2] !== lastCC; });
+    if (!pool.length) pool = scopeEntries();
+    var total = 0, i;
+    for (i = 0; i < pool.length; i++) total += weightFor(pool[i][2]);
+    var r = Math.random() * total;
+    for (i = 0; i < pool.length; i++) {
+      r -= weightFor(pool[i][2]);
+      if (r <= 0) return pool[i];
+    }
+    return pool[pool.length - 1];
+  }
+
+  function renderRegions() {
+    el.regions.innerHTML = "";
+    REGIONS.forEach(function (r) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = r[1];
+      b.setAttribute("aria-pressed", String(region === r[0]));
+      b.addEventListener("click", function () {
+        region = r[0];
+        renderRegions();
+        nextQuestion();
+      });
+      el.regions.appendChild(b);
+    });
+    var entries = scopeEntries();
+    el.scopeCount.textContent = entries.length + (entries.length === 1 ? " country" : " countries");
+  }
+
+  function renderProgress() {
+    var entries = scopeEntries();
+    var mastered = entries.filter(function (e) { return statFor(e[2]).streak >= 3; }).length;
+    var pct = entries.length ? (mastered / entries.length) * 100 : 0;
+    el.fill.style.width = pct + "%";
+    el.masteredLabel.textContent = mastered + " of " + entries.length + " mastered";
+    el.sScore.textContent = session.right + " / " + session.total;
+    el.sStreak.textContent = session.streak;
+    el.sBest.textContent = session.best;
+  }
+
+  function nextQuestion() {
+    current = pickNext();
+    lastCC = current[2];
+    answered = false;
+    el.country.querySelector(".flag").textContent = flagEmoji(current[2]);
+    el.country.querySelector(".name").textContent = current[0];
+    el.regionLabel.textContent = region === "ALL" ? REGION_NAMES[current[1]] : REGION_NAMES[region];
+    var s = statFor(current[2]);
+    el.masteryTag.textContent =
+      s.streak >= 3 ? "Mastered" :
+      s.streak > 0 ? "Streak " + s.streak + " of 3" :
+      s.wrong > 0 ? "Needs review" : "New";
+    el.feedback.innerHTML = "";
+    el.answer.value = "";
+    el.answer.disabled = false;
+    el.check.style.display = "";
+    el.reveal.style.display = "";
+    el.next.style.display = "none";
+    renderProgress();
+    el.answer.focus();
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function alsoAcceptedLine() {
+    if (current[3].length < 2) return "";
+    return '<p class="also">Also accepted: ' +
+      current[3].slice(1).map(escapeHtml).join(", ") + "</p>";
+  }
+
+  function finish(outcome, guess) {
+    answered = true;
+    el.answer.disabled = true;
+    el.check.style.display = "none";
+    el.reveal.style.display = "none";
+    el.next.style.display = "inline-block";
+    el.next.focus();
+
+    var s = statFor(current[2]);
+    var capital = escapeHtml(current[3][0]);
+    session.total++;
+
+    if (outcome === "exact" || outcome === "close") {
+      s.streak++; s.right++;
+      session.right++; session.streak++;
+      session.best = Math.max(session.best, session.streak);
+      if (outcome === "exact") {
+        el.feedback.innerHTML =
+          '<span class="stamp good">Correct</span>' +
+          '<p>The capital of ' + escapeHtml(current[0]) + " is " +
+          '<span class="capital-name">' + capital + "</span>.</p>" + alsoAcceptedLine();
+      } else {
+        el.feedback.innerHTML =
+          '<span class="stamp warn">Close enough</span>' +
+          '<p>Counted as correct — the exact spelling is ' +
+          '<span class="capital-name">' + escapeHtml(guess) + "</span>.</p>" + alsoAcceptedLine();
+      }
+    } else {
+      s.streak = 0; s.wrong++;
+      session.streak = 0;
+      var label = outcome === "revealed" ? "Revealed" : "Miss";
+      el.feedback.innerHTML =
+        '<span class="stamp bad">' + label + "</span>" +
+        '<p>The capital of ' + escapeHtml(current[0]) + " is " +
+        '<span class="capital-name">' + capital + "</span>." +
+        (outcome === "miss" ? " It will come around again soon." : "") + "</p>" +
+        alsoAcceptedLine();
+    }
+
+    stats[current[2]] = s;
+    saveStats();
+    renderProgress();
+    var tag = s.streak >= 3 ? "Mastered" : s.streak > 0 ? "Streak " + s.streak + " of 3" : "Needs review";
+    el.masteryTag.textContent = tag;
+  }
+
+  el.form.addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    if (answered) { nextQuestion(); return; }
+    var guess = el.answer.value.trim();
+    if (!guess) { el.answer.focus(); return; }
+    var verdict = judge(guess, current[3]);
+    if (verdict.ok && verdict.exact) finish("exact", verdict.matched);
+    else if (verdict.ok) finish("close", verdict.matched);
+    else finish("miss", guess);
+  });
+
+  el.reveal.addEventListener("click", function () { if (!answered) finish("revealed", ""); });
+  el.next.addEventListener("click", nextQuestion);
+
+  // Enter anywhere advances after answering (the Next button has focus, but be forgiving).
+  document.addEventListener("keydown", function (ev) {
+    if (answered && ev.key === "Enter") { ev.preventDefault(); nextQuestion(); }
+  });
+
+  el.reset.addEventListener("click", function () {
+    if (!confirm("Erase all mastery progress?")) return;
+    stats = {};
+    saveStats();
+    session = { right: 0, total: 0, streak: 0, best: 0 };
+    nextQuestion();
+  });
+
+  renderRegions();
+  nextQuestion();
+})();
+</script>
+</body>
+</html>
